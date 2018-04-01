@@ -1,0 +1,97 @@
+image: node:9.5.0
+pipelines:
+  default:
+    - step:
+        name: Install dependencies
+        max-time: 20
+        caches:
+          - node
+        script:
+          - npm i
+    - step:
+        name: NSP check
+        max-time: 20
+        caches:
+          - node
+        script:
+          - npm run nsp
+    - step:
+        name: Unit tests
+        max-time: 20
+        caches:
+          - node
+        script:
+          - npm run test:unit
+    - step:
+        name: Integration tests
+        max-time: 20
+        caches:
+          - node
+        script:
+          - npm run test:integration
+  branches:
+    master:
+      - step:
+          name: Install dependencies
+          max-time: 20
+          caches:
+            - node
+          script:
+            - npm i
+      - step:
+          name: NSP check
+          max-time: 20
+          caches:
+            - node
+          script:
+            - npm run nsp
+      - step:
+          name: Unit tests
+          max-time: 20
+          caches:
+            - node
+          script:
+            - npm run test:unit
+      - step:
+          name: Integration tests
+          max-time: 20
+          caches:
+            - node
+          script:
+            - npm run test:integration
+      - step:
+          name: Publish
+          deployment: production
+          max-time: 20
+          caches:
+            - node
+          script:
+            - printf "//`node -p \"require('url').parse(process.env.NPM_REGISTRY_URL).host\"`/:_authToken=${NPM_TOKEN}\nregistry=${NPM_REGISTRY_URL}\n" >> ~/.npmrc
+            - npm publish
+
+  # Manually triggered via Bitbucket UI
+  custom:
+    Release major version:
+      - step:
+          name: Release major version
+          max-time: 10
+          caches:
+            - node
+          script:
+            - ./.ci/version.sh major
+    Release minor version:
+      - step:
+          name: Release minor version
+          max-time: 10
+          caches:
+            - node
+          script:
+            - ./.ci/version.sh minor
+    Release patch:
+      - step:
+          name: Release patch
+          max-time: 10
+          caches:
+            - node
+          script:
+            - ./.ci/version.sh patch
